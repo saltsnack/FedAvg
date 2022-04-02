@@ -40,7 +40,8 @@ class DataSet(object):
         train_labels = extract_labels(train_labels_path)
         test_images = extract_images(test_images_path)
         test_labels = extract_labels(test_labels_path)
-
+        
+        # .shape[0]矩阵第一维的长度，这里是图片、标签的数目，如果assert条件为假就会抛出异常
         assert train_images.shape[0] == train_labels.shape[0]
         assert test_images.shape[0] == test_labels.shape[0]
 
@@ -59,7 +60,9 @@ class DataSet(object):
             test_images = np.multiply(test_images, 1.0 / 255.0)
 
         if is_IID == 1:
+            # order = [0 1 2 ... self.train_data_size-1]
             order = np.arange(self.train_data_size)
+            # 将order打乱顺序
             np.random.shuffle(order)
             self.train_data = train_images[order]
             self.train_label = train_labels[order]
