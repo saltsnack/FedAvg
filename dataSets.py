@@ -31,6 +31,8 @@ class DataSet(object):
 
 
     def mnist_dataset_construct(self, is_IID, dtype):
+        
+        # 装载数据集
         data_dir = r'./data/MNIST'
         train_images_path = os.path.join(data_dir, 'train-images-idx3-ubyte.gz')
         train_labels_path = os.path.join(data_dir, 'train-labels-idx1-ubyte.gz')
@@ -44,15 +46,19 @@ class DataSet(object):
         # .shape[0]矩阵第一维的长度，这里是图片、标签的数目，如果assert条件为假就会抛出异常
         assert train_images.shape[0] == train_labels.shape[0]
         assert test_images.shape[0] == test_labels.shape[0]
-
+        
+        # 获取数据集大小
         self.train_data_size = train_images.shape[0]
         self.test_data_size = test_images.shape[0]
 
         assert train_images.shape[3] == 1
         assert test_images.shape[3] == 1
+        
+        # 重塑张量，成为（图片数目, 像素点）的形式
         train_images = train_images.reshape(train_images.shape[0], train_images.shape[1] * train_images.shape[2])
         test_images = test_images.reshape(test_images.shape[0], test_images.shape[1] * test_images.shape[2])
-
+        
+        # 使像素值范围为[0,1]
         if dtype == tf.float32:
             train_images = train_images.astype(np.float32)
             train_images = np.multiply(train_images, 1.0 / 255.0)
@@ -64,14 +70,18 @@ class DataSet(object):
             order = np.arange(self.train_data_size)
             # 将order打乱顺序
             np.random.shuffle(order)
+            # 即IID的训练数据为数据集随机打乱顺序
             self.train_data = train_images[order]
             self.train_label = train_labels[order]
         else:
+            # 按行比较，输出每行最大值的索引。这里输出的是“对应图片上的手写数字”
             labels = np.argmax(train_labels, axis=1)
+            # 将labels由小到大排序，返回排序后元素的原索引值序列。这里是聚类提取出由小到大的每个手写数字的位置
             order = np.argsort(labels)
+            # 即Non-IID的训练数据是0,1,...,9的每一组图片
             self.train_data = train_images[order]
             self.train_label = train_labels[order]
-
+        
         self.test_data = test_images
         self.test_label = test_labels
 
