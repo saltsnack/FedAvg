@@ -46,7 +46,7 @@ if __name__=='__main__':
         with tf.variable_scope('inputs') as scope:
             inputsx = tf.placeholder(tf.float32, [None, 24, 24, 3])
             inputsy = tf.placeholder(tf.float32, [None, 10])
-
+    # 装载模型
     myModel = Models(args.modelname, inputsx)
 
     predict_label = tf.nn.softmax(myModel.outputs)
@@ -69,22 +69,33 @@ if __name__=='__main__':
             allow_soft_placement=True, \
             gpu_options=tf.GPUOptions(allow_growth=True))) as sess:
         sess.run(tf.initialize_all_variables())
-
+        
+        # 创建clients
         myClients = clients(args.num_of_clients, datasetname,
                             args.batchsize, args.epoch, sess, train, inputsx, inputsy, is_IID=args.IID)
 
         vars = tf.trainable_variables()
         global_vars = sess.run(vars)
+        
+        # 每轮选择参与的客户端数目
         num_in_comm = int(max(args.num_of_clients * args.cfraction, 1))
+        
+        # 整个FL
         for i in range(args.num_comm):
             print("communicate round {}".format(i))
+            
+            # 随机选择客户端
             order = np.arange(args.num_of_clients)
             np.random.shuffle(order)
             clients_in_comm = ['client{}'.format(i) for i in order[0:num_in_comm]]
 
+            
             sum_vars = None
+            # 一轮模型训练的进度条
             for client in tqdm(clients_in_comm):
+                # 客户端本地训练
                 local_vars = myClients.ClientUpdate(client, global_vars)
+                # 模型聚合
                 if sum_vars is None:
                     sum_vars = local_vars
                 else:
@@ -94,7 +105,8 @@ if __name__=='__main__':
             global_vars = []
             for var in sum_vars:
                 global_vars.append(var / num_in_comm)
-
+            
+            # 每val_freq轮进行一次模型测试
             if i % args.val_freq == 0:
                 for variable, value in zip(vars, global_vars):
                     variable.load(value, sess)
@@ -102,6 +114,7 @@ if __name__=='__main__':
                 test_label = myClients.test_label
                 print(sess.run(accuracy, feed_dict={inputsx: test_data, inputsy: test_label}))
 
+            # 每save_freq轮进行一次模型保存    
             if i % args.save_freq == 0:
                 checkpoint_name = os.path.join(args.save_path, '{}_comm'.format(args.modelname) +
                                                'IID{}_communication{}'.format(args.IID, i+1)+ '.ckpt')
