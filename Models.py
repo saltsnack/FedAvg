@@ -112,6 +112,7 @@ if __name__=='__main__':
             gpu_options=tf.GPUOptions(allow_growth=True))) as sess:
         sess.run(tf.initialize_all_variables())
 
+        # 为什么这里用了固定值而不是用户传入的参数？？
         for i in range(1000):
             batch_images, batch_labels = mnist.next_batch(100)
             sess.run(train, feed_dict={input_images: batch_images, true_label: batch_labels})
