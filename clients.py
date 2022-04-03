@@ -36,7 +36,8 @@ class user(object):
             self._index_in_train_epoch = batchsize
         end = self._index_in_train_epoch
         return self.train_dataset[start:end], self.train_label[start:end]
-
+    
+    # 数据集处理
     def preprocess(self):
         new_images = []
         shape = (24, 24, 3)
@@ -79,8 +80,9 @@ class clients(object):
         self.clientsSet = {}
 
         self.dataset_balance_allocation()
-
-
+        
+        
+    # 给每个客户端分配的数据量相同（需要修改！）
     def dataset_balance_allocation(self):
         dataset = DataSet(self.dataset_name, self.IID)
         self.dataset_size = dataset.train_data_size
@@ -89,8 +91,14 @@ class clients(object):
 
         localDataSize = self.dataset_size // self.num_of_clients
         shard_size = localDataSize // 2
+        
+        # shard_id是长度为num_of_clients * 2的乱序序列
         shards_id = np.random.permutation(self.dataset_size // shard_size)
+        
+        # 只需要处理CIFAR10数据集
         preprocess = 1 if self.dataset_name == 'cifar10' else 0
+        
+        # 给客户端分配数据，相当于客户端的每一半数据都是随机从数据集取的连续的图片
         for i in range(self.num_of_clients):
             shards_id1 = shards_id[i * 2]
             shards_id2 = shards_id[i * 2 + 1]
@@ -101,7 +109,8 @@ class clients(object):
             someone = user(np.vstack((data_shards1, data_shards2)), np.vstack((label_shards1, label_shards2)), preprocess)
             self.clientsSet['client{}'.format(i)] = someone
 
-
+    
+    # 客户端本地训练
     def ClientUpdate(self, client, global_vars):
         all_vars = tf.trainable_variables()
         for variable, value in zip(all_vars, global_vars):
