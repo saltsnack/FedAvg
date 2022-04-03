@@ -5,6 +5,8 @@ from dataSets import DataSet
 
 
 class Models(object):
+    
+    # 构造训练模型
     def __init__(self, modelName, inputs):
         self.inputs = inputs
         self.model_name = modelName
@@ -79,7 +81,7 @@ class Models(object):
 
 
 
-
+# 
 if __name__=='__main__':
 
     # GPU preparation
