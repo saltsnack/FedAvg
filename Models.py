@@ -81,7 +81,7 @@ class Models(object):
 
 
 
-# 
+# 当前模块Models被直接执行时if条件为真，而在当前模块被导入时if条件为假
 if __name__=='__main__':
 
     # GPU preparation
@@ -115,6 +115,7 @@ if __name__=='__main__':
         sess.run(tf.initialize_all_variables())
 
         # 为什么这里用了固定值而不是用户传入的参数？？
+        # 这是一个试验的训练函数，真实FL训练中没有用到
         for i in range(1000):
             batch_images, batch_labels = mnist.next_batch(100)
             sess.run(train, feed_dict={input_images: batch_images, true_label: batch_labels})
