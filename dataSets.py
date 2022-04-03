@@ -88,6 +88,7 @@ class DataSet(object):
 
     def cifar10_dataset_construct(self, is_IID):
         images, labels = [], []
+        # 装载训练数据集
         for filename in ['./data/CIFAR-10/cifar-10-batches-py/data_batch_{}'.format(i) for i in range(1, 6)]:
             with open(filename, 'rb') as fo:
                 if 'Windows' in platform.platform():
@@ -112,7 +113,7 @@ class DataSet(object):
             order = np.argsort(labels)
             self.train_data = images[order]
             self.train_label = dense_to_one_hot(labels[order])
-
+        # 装载测试数据集
         images, labels = [], []
         with open(r'./data//CIFAR-10/cifar-10-batches-py/test_batch', 'rb') as fo:
             if 'Windows' in platform.platform():
@@ -148,10 +149,11 @@ class DataSet(object):
         self.train_data_size = self.train_data.shape[0]
         self.test_data_size = self.test_data.shape[0]
 
-
+    # 取一batch的训练数据
     def next_batch(self, batch_size):
         start = self._index_in_train_epoch
         self._index_in_train_epoch += batch_size
+        # 如果全部训练数据都被训练过，就将训练数据打乱，开始新一轮epoch的训练
         if self._index_in_train_epoch > self.train_data_size:
             order = np.arange(self.train_data_size)
             np.random.shuffle(order)
