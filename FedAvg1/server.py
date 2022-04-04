@@ -112,7 +112,7 @@ if __name__=='__main__':
                     variable.load(value, sess)
                 test_data = myClients.test_data
                 test_label = myClients.test_label
-                print(sess.run(accuracy, feed_dict={inputsx: test_data, inputsy: test_label}))
+                print('accuracy = {}'.format(sess.run(accuracy, feed_dict={inputsx: test_data, inputsy: test_label})))
 
             # 每save_freq轮进行一次模型保存    
             if i % args.save_freq == 0:
