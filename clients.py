@@ -79,37 +79,57 @@ class clients(object):
         self.IID = is_IID
         self.clientsSet = {}
 
-        self.dataset_balance_allocation()
-        
-        
-    # 给每个客户端分配的数据量相同（需要修改！）
-    def dataset_balance_allocation(self):
+        self.dataset_allocation()
+
+    # 为客户端分配随机大小的数据量
+    def allocation_train_data(K, train_data_size):
+        # 生成K-1个[0, train_data_size]范围内的整数
+        a = []
+        for i in range(K - 1):
+            b = np.random.randint(0, train_data_size)
+            a.append(b)
+
+        # 向a添加0和train_data_size值
+        a.append(0)
+        a.append(train_data_size)
+
+        # 将a排序
+        a.sort()
+
+        # 生成客户端数据集大小列表
+        client_train_data_sizes = []
+        for i in range(K):
+            size = a[i + 1] - a[i]
+            client_train_data_sizes.append(size)
+
+        return client_train_data_sizes
+
+
+    # 给每个客户端分配数据
+    def dataset_allocation(self):
         dataset = DataSet(self.dataset_name, self.IID)
         self.dataset_size = dataset.train_data_size
         self.test_data = dataset.test_data
         self.test_label = dataset.test_label
 
-        localDataSize = self.dataset_size // self.num_of_clients
-        shard_size = localDataSize // 2
-        
-        # shard_id是长度为num_of_clients * 2的乱序序列
-        shards_id = np.random.permutation(self.dataset_size // shard_size)
+        localDataSizes = self.allocation_train_data(self.num_of_clients, self.dataset_size)
         
         # 只需要处理CIFAR10数据集
         preprocess = 1 if self.dataset_name == 'cifar10' else 0
         
-        # 给客户端分配数据，相当于客户端的每一半数据都是随机从数据集取的连续的图片
+        # 给客户端分配数据集中连续的随机大小的数据
+        start = end = 0
         for i in range(self.num_of_clients):
-            shards_id1 = shards_id[i * 2]
-            shards_id2 = shards_id[i * 2 + 1]
-            data_shards1 = dataset.train_data[shards_id1 * shard_size: shards_id1 * shard_size + shard_size]
-            data_shards2 = dataset.train_data[shards_id2 * shard_size: shards_id2 * shard_size + shard_size]
-            label_shards1 = dataset.train_label[shards_id1 * shard_size: shards_id1 * shard_size + shard_size]
-            label_shards2 = dataset.train_label[shards_id2 * shard_size: shards_id2 * shard_size + shard_size]
-            someone = user(np.vstack((data_shards1, data_shards2)), np.vstack((label_shards1, label_shards2)), preprocess)
+            end = end + localDataSizes[i]
+
+            data = dataset.train_data[start: end]
+            label = dataset.train_label[start: end]
+            someone = user(data, label)
             self.clientsSet['client{}'.format(i)] = someone
 
-    
+            start = end
+
+
     # 客户端本地训练
     def ClientUpdate(self, client, global_vars):
         all_vars = tf.trainable_variables()
