@@ -1,0 +1,4 @@
+model_checkpoint_path: "mnist_2nn_commIID1_communication10.ckpt"
+all_model_checkpoint_paths: "mnist_2nn_commIID1_communication8.ckpt"
+all_model_checkpoint_paths: "mnist_2nn_commIID1_communication9.ckpt"
+all_model_checkpoint_paths: "mnist_2nn_commIID1_communication10.ckpt"
